@@ -9,19 +9,20 @@ from .order_management_exception import OrderManagementException
 from .order_shipping import OrderShipping
 from .order_manager_config import JSON_FILES_PATH
 
+
 class OrderManager:
     """Class for providing the methods for managing the orders process"""
     def __init__(self):
         pass
 
     @staticmethod
-    def validate_ean13( ean13 ):
+    def validate_ean13(ean13):
         """method vor validating a ean13 code"""
         # PLEASE INCLUDE HERE THE CODE FOR VALIDATING THE EAN13
         # RETURN TRUE IF THE EAN13 IS RIGHT, OR FALSE IN OTHER CASE
         checksum = 0
         code_read = -1
-        res = False
+        valid = False
         regex_ean13 = re.compile("^[0-9]{13}$")
         valid_ean13_format = regex_ean13.fullmatch(ean13)
         if valid_ean13_format is None:
@@ -35,28 +36,28 @@ class OrderManager:
             if i == 0:
                 code_read = current_digit
             else:
-                checksum += (current_digit) * 3 if (i % 2 != 0) else current_digit
+                checksum += current_digit * 3 if (i % 2 != 0) else current_digit
         control_digit = (10 - (checksum % 10)) % 10
 
         if (code_read != -1) and (code_read == control_digit):
-            res = True
+            valid = True
         else:
             raise OrderManagementException("Invalid EAN13 control digit")
-        return res
+        return valid
 
     @staticmethod
-    def validate_tracking_code( t_c ):
+    def validate_tracking_code(tracking_code):
         """Method for validating sha256 values"""
-        myregex = re.compile(r"[0-9a-fA-F]{64}$")
-        res = myregex.fullmatch(t_c)
-        if not res:
+        regex_tracking_code = re.compile(r"[0-9a-fA-F]{64}$")
+        valid = regex_tracking_code.fullmatch(tracking_code)
+        if not valid:
             raise OrderManagementException("tracking_code format is not valid")
 
     @staticmethod
-    def save_store( data ):
-        """Medthod for saving the orders store"""
+    def save_order(data):
+        """Method for saving the order in store"""
         file_store = JSON_FILES_PATH + "orders_store.json"
-        #first read the file
+        # first read the file
         try:
             with open(file_store, "r", encoding="utf-8", newline="") as file:
                 data_list = json.load(file)
@@ -82,7 +83,7 @@ class OrderManager:
         return True
 
     @staticmethod
-    def save_fast(data):
+    def save_order_without_check(data): #TODO esta funcion no se usa
         """Method for saving the orders store"""
         orders_store = JSON_FILES_PATH + "orders_store.json"
         with open(orders_store, "r+", encoding="utf-8", newline="") as file:
@@ -92,12 +93,12 @@ class OrderManager:
             json.dump(data_list, file, indent=2)
 
     @staticmethod
-    def save_orders_shipped( shipment ):
+    def save_shipment(shipment):
         """Saves the shipping object into a file"""
-        shimpents_store_file = JSON_FILES_PATH + "shipments_store.json"
+        shipments_store_file = JSON_FILES_PATH + "shipments_store.json"
         # first read the file
         try:
-            with open(shimpents_store_file, "r", encoding="utf-8", newline="") as file:
+            with open(shipments_store_file, "r", encoding="utf-8", newline="") as file:
                 data_list = json.load(file)
         except FileNotFoundError:
             # file is not found , so  init my data_list
@@ -105,18 +106,18 @@ class OrderManager:
         except json.JSONDecodeError as ex:
             raise OrderManagementException("JSON Decode Error - Wrong JSON Format") from ex
 
-        #append the shipments list
+        # append the shipments list
         data_list.append(shipment.__dict__)
 
         try:
-            with open(shimpents_store_file, "w", encoding="utf-8", newline="") as file:
+            with open(shipments_store_file, "w", encoding="utf-8", newline="") as file:
                 json.dump(data_list, file, indent=2)
         except FileNotFoundError as ex:
             raise OrderManagementException("Wrong file or file path") from ex
 
 
     #pylint: disable=too-many-arguments
-    def register_order( self, product_id,
+    def register_order( self, product_id, #TODO TOO MANY ARGUMENTS, MAYBE CREATE AN OBJECT TO HOLD THEM AND PASS THEAM EASIERLY
                         order_type,
                         address,
                         phone_number,
@@ -128,6 +129,7 @@ class OrderManager:
         if not res:
             raise OrderManagementException ("order_type is not valid")
 
+        #TODO EXTRACT METHOD TO VALIDATE ADDRESS ETC
         myregex = re.compile(r"^(?=^.{20,100}$)(([a-zA-Z0-9]+\s)+[a-zA-Z0-9]+)$")
         res = myregex.fullmatch(address)
         if not res:
@@ -147,9 +149,9 @@ class OrderManager:
                                     order_type,
                                     address,
                                     phone_number,
-                                    zip_code)
+                                    zip_code, juan=6)
 
-        self.save_store(my_order)
+        self.save_order(my_order)
 
         return my_order.order_id
 
@@ -218,7 +220,7 @@ class OrderManager:
 
         #save the OrderShipping in shipments_store.json
 
-        self.save_orders_shipped(my_sign)
+        self.save_shipment(my_sign)
 
         return my_sign.tracking_code
 

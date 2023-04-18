@@ -7,7 +7,7 @@ class OrderRequest:
     """Class representing the register of the order in the system"""
     #pylint: disable=too-many-arguments
     def __init__( self, product_id, order_type,
-                  delivery_address, phone_number, zip_code ):
+                  delivery_address, phone_number, zip_code, juan=0):
         self.__product_id = product_id
         self.__delivery_address = delivery_address
         self.__order_type = order_type

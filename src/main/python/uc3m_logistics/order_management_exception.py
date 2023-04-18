@@ -1,5 +1,6 @@
 """Exception for the access_management module"""
 
+
 class OrderManagementException(Exception):
     """Personalised exception for Order Management"""
     def __init__(self, message):
@@ -12,5 +13,5 @@ class OrderManagementException(Exception):
         return self.__message
 
     @message.setter
-    def message(self,value):
+    def message(self, value):
         self.__message = value
