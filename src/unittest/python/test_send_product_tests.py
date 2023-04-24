@@ -80,7 +80,7 @@ class TestSendProduct(TestCase):
         file_test = JSON_FILES_RF2_PATH + "valid.json"
         my_manager = OrderManager()
 
-    #first , prepare the test , remove orders_store
+        # first, prepare the test, remove orders_store
         file_orders_store = JSON_FILES_PATH + "orders_store.json"
         file_shipments_store = JSON_FILES_PATH + "shipments_store.json"
         if os.path.isfile(file_orders_store):
