@@ -82,12 +82,12 @@ class OrderManager:
         data_list.append(shipment.__dict__)
         self.write_json(file_name, data_list)
 
-    #pylint: disable=too-many-arguments
-    def register_order(self, product_id, #TODO TOO MANY ARGUMENTS, MAYBE CREATE AN OBJECT TO HOLD THEM AND PASS THEAM EASIERLY
-                        order_type,
-                        address,
-                        phone_number,
-                        zip_code):
+    # pylint: disable=too-many-arguments
+    def register_order(self, product_id,  # TODO: TOO MANY ARGUMENTS
+                       order_type,
+                       address,
+                       phone_number,
+                       zip_code):
         """Register the orders into the order's file"""
         self.validate_order_type(order_type)
         self.validate_address(address)
@@ -104,7 +104,8 @@ class OrderManager:
 
         return my_order.order_id
 
-    def validate_zip_code(self, zip_code):
+    @staticmethod
+    def validate_zip_code(zip_code):
         if zip_code.isnumeric() and len(zip_code) == 5:
             if int(zip_code) > 52999 or int(zip_code) < 1000:
                 raise OrderManagementException("zip_code is not valid")
@@ -121,7 +122,7 @@ class OrderManager:
     def validate_order_type(self, order_type):
         self.check_regex(order_type, r"(Regular|Premium)", "order_type is not valid")
 
-    #pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals
     def send_product(self, input_file):
         """Sends the order included in the input_file"""
         try:
@@ -133,7 +134,7 @@ class OrderManager:
         except json.JSONDecodeError as ex:
             raise OrderManagementException("JSON Decode Error - Wrong JSON Format") from ex
 
-        #check all the information
+        # check all the information
         try:
             self.validate_order_id(data["OrderID"])
             self.validate_email(data["ContactEmail"])
@@ -152,7 +153,8 @@ class OrderManager:
 
         return my_shipment.tracking_code
 
-    def search_order_id(self, order_id):
+    @staticmethod
+    def search_order_id(order_id):
         file_store = JSON_FILES_PATH + "orders_store.json"
         with open(file_store, "r", encoding="utf-8", newline="") as file:
             data_list = json.load(file)
@@ -186,8 +188,7 @@ class OrderManager:
         self.check_regex(email, regex_email, "contact email is not valid")
 
     def validate_order_id(self, order_id):
-       self.check_regex(order_id, r"[0-9a-fA-F]{32}$", "order id is not valid")
-
+        self.check_regex(order_id, r"[0-9a-fA-F]{32}$", "order id is not valid")
 
     def deliver_product(self, tracking_code):
         """Register the delivery of the product"""
@@ -207,13 +208,15 @@ class OrderManager:
         self.write_json(file_name, data_list)
         return True
 
-    def check_delivery_day(self, delivery_day):
+    @staticmethod
+    def check_delivery_day(delivery_day):
         today = datetime.today().date()
         delivery_date = datetime.fromtimestamp(delivery_day).date()
         if delivery_date != today:
             raise OrderManagementException("Today is not the delivery date")
 
-    def search_tracking_code(self, tracking_code):
+    @staticmethod
+    def search_tracking_code(tracking_code):
         """Check if this tracking_code is in shipments_store"""
         shipments_store_file = JSON_FILES_PATH + "shipments_store.json"
         # first read the file
@@ -230,19 +233,21 @@ class OrderManager:
                 return item
         raise OrderManagementException("tracking_code is not found")
 
-    def read_json(self, file_name):
+    @staticmethod
+    def read_json(file_name):
         full_path = JSON_FILES_PATH + file_name
         try:
             with open(full_path, "r", encoding="utf-8", newline="") as file:
                 data_list = json.load(file)
-        except FileNotFoundError as ex:
+        except FileNotFoundError:
             # file is not found, so  init my data_list
             data_list = []
         except json.JSONDecodeError as ex:
             raise OrderManagementException("JSON Decode Error - Wrong JSON Format") from ex
         return data_list
 
-    def write_json(self, file_name, data_list):
+    @staticmethod
+    def write_json(file_name, data_list):
         full_path = JSON_FILES_PATH + file_name
         try:
             with open(full_path, "w", encoding="utf-8", newline="") as file:
@@ -250,7 +255,8 @@ class OrderManager:
         except FileNotFoundError as ex:
             raise OrderManagementException("Wrong file or file path") from ex
 
-    def check_regex(self, variable, regex, message):
+    @staticmethod
+    def check_regex(variable, regex, message):
         my_regex = re.compile(regex)
         valid = my_regex.fullmatch(variable)
         if not valid:
