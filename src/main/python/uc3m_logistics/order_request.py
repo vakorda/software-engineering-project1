@@ -42,7 +42,7 @@ class OrderRequest:
 
     @property
     def phone_number(self):
-        """Property representing the clients's phone number"""
+        """Property representing the clients' phone number"""
         return self.__phone_number
 
     @phone_number.setter
