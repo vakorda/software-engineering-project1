@@ -1,6 +1,7 @@
 import re
 from uc3m_logistics import OrderManagementException
 
+
 class Attribute():
     def __init__(self):
         self._attr_value = ""
@@ -8,6 +9,7 @@ class Attribute():
         self._validation_pattern = r""
 
     def _validate(self, value):
+        """Checks that the value corresponds to the regular expression"""
         my_regex = re.compile(self._validation_pattern)
         valid = my_regex.fullmatch(value)
         if not valid:

@@ -2,21 +2,23 @@
 import hashlib
 import json
 from datetime import datetime
+from attributes import Address, EAN13, Email, OrderID,\
+    OrderType, PhoneNumber, TrackingCode, ZipCode
 
 
 class OrderRequest:
     """Class representing the register of the order in the system"""
     # pylint: disable=too-many-arguments
-    def __init__(self, product_id, order_type,
-                 delivery_address, phone_number, zip_code):
+    def __init__(self, product_id: str = None, order_type: str = "Regular",
+                 delivery_address: str = None, phone_number: str = None, zip_code: str = None):
         self.__product_id = product_id
-        self.__delivery_address = delivery_address
-        self.__order_type = order_type
-        self.__phone_number = phone_number
-        self.__zip_code = zip_code
+        self.__delivery_address = Address(delivery_address).value
+        self.__order_type = OrderType(order_type).value
+        self.__phone_number = PhoneNumber(phone_number).value
+        self.__zip_code = ZipCode(zip_code).value
         justnow = datetime.utcnow()
         self.__time_stamp = datetime.timestamp(justnow)
-        self.__order_id = hashlib.md5(self.__str__().encode()).hexdigest()
+        self.__order_id = OrderID(hashlib.md5(self.__str__().encode()).hexdigest()).value
 
     def __str__(self):
         return "OrderRequest:" + json.dumps(self.__dict__)

@@ -1,6 +1,7 @@
 """Contains the class OrderShipping"""
 from datetime import datetime
 import hashlib
+from attributes import Email, OrderID, TrackingCode
 
 # pylint: disable=too-many-instance-attributes
 
@@ -12,15 +13,15 @@ class OrderShipping:
         self.__alg = "SHA-256"
         self.__type = "DS"
         self.__product_id = product_id
-        self.__order_id = order_id
-        self.__delivery_email = delivery_email
+        self.__order_id = OrderID(order_id).value
+        self.__delivery_email = Email(delivery_email).value
         justnow = datetime.utcnow()
         self.__issued_at = datetime.timestamp(justnow)
         delivery_days = 7 if order_type == "Regular" else 1
         # timestamp is represented in seconds.microseconds
         # __delivery_day must be expressed in seconds to be added to the timestamp
         self.__delivery_day = self.__issued_at + (delivery_days * 24 * 60 * 60)
-        self.__tracking_code = hashlib.sha256(self.__signature_string().encode()).hexdigest()
+        self.__tracking_code = TrackingCode(hashlib.sha256(self.__signature_string().encode()).hexdigest()).value
 
     def __signature_string(self):
         """Composes the string to be used for generating the tracking_code"""

@@ -1,4 +1,4 @@
-from .attribute import Attribute
+from attribute import Attribute
 from uc3m_logistics import OrderManagementException
 
 
@@ -6,7 +6,7 @@ class EAN13(Attribute):
     def __init__(self, attr_value):
         self._error_message = "Invalid EAN13 code string"
         self._validation_pattern = r"^[0-9]{13}$"
-        self._attr_value = attr_value
+        self.value = attr_value
 
     def _validate(self, value):
         """Method for validating a ean13 code"""
