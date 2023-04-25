@@ -1,7 +1,7 @@
 """Contains the class OrderShipping"""
 from datetime import datetime
 import hashlib
-from attributes import Email, OrderID, TrackingCode
+from .attributes import EAN13, Email, OrderID, TrackingCode
 
 # pylint: disable=too-many-instance-attributes
 
@@ -12,7 +12,7 @@ class OrderShipping:
     def __init__(self, product_id, order_id, delivery_email, order_type):
         self.__alg = "SHA-256"
         self.__type = "DS"
-        self.__product_id = product_id
+        self.__product_id = EAN13(product_id).value
         self.__order_id = OrderID(order_id).value
         self.__delivery_email = Email(delivery_email).value
         justnow = datetime.utcnow()

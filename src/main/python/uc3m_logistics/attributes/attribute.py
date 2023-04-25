@@ -1,8 +1,8 @@
 import re
-from uc3m_logistics import OrderManagementException
+from ..order_management_exception import OrderManagementException
 
 
-class Attribute():
+class Attribute:
     def __init__(self):
         self._attr_value = ""
         self._error_message = ""

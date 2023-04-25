@@ -2,8 +2,11 @@
 import hashlib
 import json
 from datetime import datetime
-from attributes import Address, EAN13, Email, OrderID,\
-    OrderType, PhoneNumber, TrackingCode, ZipCode
+from freezegun import freeze_time
+from .order_management_exception import OrderManagementException
+from .order_manager_config import JSON_FILES_PATH
+from .attributes import Address, EAN13, OrderID,\
+    OrderType, PhoneNumber, ZipCode
 
 
 class OrderRequest:
@@ -11,7 +14,7 @@ class OrderRequest:
     # pylint: disable=too-many-arguments
     def __init__(self, product_id: str = None, order_type: str = "Regular",
                  delivery_address: str = None, phone_number: str = None, zip_code: str = None):
-        self.__product_id = product_id
+        self.__product_id = EAN13(product_id).value
         self.__delivery_address = Address(delivery_address).value
         self.__order_type = OrderType(order_type).value
         self.__phone_number = PhoneNumber(phone_number).value
@@ -74,3 +77,33 @@ class OrderRequest:
     def zip_code(self):
         """Returns the order's zip_code"""
         return self.__zip_code
+
+    @classmethod
+    def search_order_id(cls, order_id):
+        file_store = JSON_FILES_PATH + "orders_store.json"
+        with open(file_store, "r", encoding="utf-8", newline="") as file:
+            data_list = json.load(file)
+        found = False
+        for item in data_list:
+            if item["_OrderRequest__order_id"] == order_id:
+                found = True
+                # retrieve the orders data
+                product_id = item["_OrderRequest__product_id"]
+                delivery_address = item["_OrderRequest__delivery_address"]
+                order_type = item["_OrderRequest__order_type"]
+                phone_number = item["_OrderRequest__phone_number"]
+                order_timestamp = item["_OrderRequest__time_stamp"]
+                zip_code = item["_OrderRequest__zip_code"]
+                # set the time when the order was registered for checking the md5
+                with freeze_time(datetime.fromtimestamp(order_timestamp).date()):
+                    order = cls(product_id=product_id,
+                                delivery_address=delivery_address,
+                                order_type=order_type,
+                                phone_number=phone_number,
+                                zip_code=zip_code)
+
+                if order.order_id != order_id:
+                    raise OrderManagementException("Orders' data have been manipulated")
+        if not found:
+            raise OrderManagementException("order_id not found")
+        return order

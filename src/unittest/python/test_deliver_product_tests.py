@@ -18,13 +18,12 @@ class TestDeliverProduct(TestCase):
         file_store_patient = JSON_FILES_PATH + "orders_store.json"
         file_shipments_store = JSON_FILES_PATH + "shipments_store.json"
 
-
         if os.path.isfile(file_store_patient):
             os.remove(file_store_patient)
         if os.path.isfile(file_shipments_store):
             os.remove(file_shipments_store)
 
-        #add orders and shipping info in the stores
+        # add orders and shipping info in the stores
         my_manager = OrderManager()
         # add an order in the store
         file_test = JSON_FILES_RF2_PATH + "valid.json"
@@ -35,11 +34,9 @@ class TestDeliverProduct(TestCase):
                                   zip_code="01000")
         my_manager.send_product(file_test)
 
-
-
     @freeze_time("2023-03-15")
     def test_deliver_product_ok(self):
-        """basic path , tracking_code is found , and date = today"""
+        """basic path, tracking_code is found, and date = today"""
         my_manager = OrderManager()
         value = my_manager.deliver_product(
             "847dfd443d86c9c222242010c11a44bd9a09c37b42b6e956db97ba173abefe83")
@@ -56,7 +53,7 @@ class TestDeliverProduct(TestCase):
 
     @freeze_time("2023-04-18")
     def test_deliver_product_no_date(self):
-        """path tracking_code is found , and date is not today"""
+        """path tracking_code is found, and date is not today"""
         file_shipments_delivered = JSON_FILES_PATH + "shipments_delivered.json"
         my_manager = OrderManager()
 
@@ -83,7 +80,7 @@ class TestDeliverProduct(TestCase):
 
     @freeze_time("2023-03-18")
     def test_deliver_product_bad_date_signature(self):
-        """path signature is not valid format , only 63 chars"""
+        """path signature is not valid format, only 63 chars"""
         file_store_shipments = JSON_FILES_PATH + "shipments_delivered.json"
         my_manager = OrderManager()
         # read the file  to compare
@@ -137,7 +134,7 @@ class TestDeliverProduct(TestCase):
 
     @freeze_time("2023-03-18")
     def test_deliver_product_no_shipments_store(self):
-        """path: shipments_store is not found, so remove shimpents_store.json"""
+        """path: shipments_store is not found, so remove shipments_store.json"""
         file_shipments_store = JSON_FILES_PATH + "shipments_store.json"
         if os.path.isfile(file_shipments_store):
             os.remove(file_shipments_store)
@@ -151,9 +148,9 @@ class TestDeliverProduct(TestCase):
     @freeze_time("2023-03-18")
     def test_deliver_product_shipments_store_is_empty(self):
         """for testing: shipments_store is empty"""
-        #write a shipments_store empty
+        # write a shipments_store empty
         file_shipments_store = JSON_FILES_PATH + "shipments_store.json"
-        data_list=[]
+        data_list = []
         with open(file_shipments_store, "w", encoding="utf-8", newline="") as file:
             json.dump(data_list, file, indent=2)
 

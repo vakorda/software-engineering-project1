@@ -1,6 +1,5 @@
 """Module """
 import datetime
-import re
 import json
 from datetime import datetime
 from freezegun import freeze_time
@@ -8,6 +7,8 @@ from .order_request import OrderRequest
 from .order_management_exception import OrderManagementException
 from .order_shipping import OrderShipping
 from .order_manager_config import JSON_FILES_PATH
+from .attributes import Address, EAN13, Email, OrderID,\
+    OrderType, PhoneNumber, TrackingCode, ZipCode
 
 
 class OrderManager:
@@ -15,41 +16,42 @@ class OrderManager:
     def __init__(self):
         pass
 
-    def validate_ean13(self, ean13):
-        """Method for validating a ean13 code"""
-        # PLEASE INCLUDE HERE THE CODE FOR VALIDATING THE EAN13
-        # RETURN TRUE IF THE EAN13 IS RIGHT, OR FALSE IN OTHER CASE
-        checksum = 0
-        code_read = -1
-        valid = False
-        self.check_regex(ean13, r'^[0-9]{13}$', "Invalid EAN13 code string")
+#    def validate_ean13(self, ean13):
+#        """Method for validating a ean13 code"""
+#        # PLEASE INCLUDE HERE THE CODE FOR VALIDATING THE EAN13
+#        # RETURN TRUE IF THE EAN13 IS RIGHT, OR FALSE IN OTHER CASE
+#        checksum = 0
+#        code_read = -1
+#        valid = False
+#        self.check_regex(ean13, r'^[0-9]{13}$', "Invalid EAN13 code string")
+#
+#        for i, digit in enumerate(reversed(ean13)):
+#            try:
+#                current_digit = int(digit)
+#            except ValueError as v_e:
+#                raise OrderManagementException("Invalid EAN13 code string") from v_e
+#            if i == 0:
+#                code_read = current_digit
+#            else:
+#                checksum += current_digit * 3 if (i % 2 != 0) else current_digit
+#        control_digit = (10 - (checksum % 10)) % 10
+#
+#        if (code_read != -1) and (code_read == control_digit):
+#            valid = True
+#        else:
+#            raise OrderManagementException("Invalid EAN13 control digit")
+#        return valid
 
-        for i, digit in enumerate(reversed(ean13)):
-            try:
-                current_digit = int(digit)
-            except ValueError as v_e:
-                raise OrderManagementException("Invalid EAN13 code string") from v_e
-            if i == 0:
-                code_read = current_digit
-            else:
-                checksum += current_digit * 3 if (i % 2 != 0) else current_digit
-        control_digit = (10 - (checksum % 10)) % 10
+#    def validate_tracking_code(self, tracking_code):
+#        """Method for validating sha256 values"""
+#        self.check_regex(tracking_code, r"[0-9a-fA-F]{64}$", "tracking_code format is not valid")
 
-        if (code_read != -1) and (code_read == control_digit):
-            valid = True
-        else:
-            raise OrderManagementException("Invalid EAN13 control digit")
-        return valid
-
-    def validate_tracking_code(self, tracking_code):
-        """Method for validating sha256 values"""
-        self.check_regex(tracking_code, r"[0-9a-fA-F]{64}$", "tracking_code format is not valid")
-
-    def save_order(self, data):
+    @classmethod
+    def save_order(cls, data):
         """Method for saving the order in store"""
         file_name = "orders_store.json"
         # first read the file
-        data_list = self.read_json(file_name)
+        data_list = cls.read_json(file_name)
 
         found = False
         for item in data_list:
@@ -60,7 +62,7 @@ class OrderManager:
         else:
             raise OrderManagementException("order_id is already registered in orders_store")
 
-        self.write_json(file_name, data_list)
+        cls.write_json(file_name, data_list)
         return True
 
     @staticmethod
@@ -73,57 +75,60 @@ class OrderManager:
             file.seek(0)
             json.dump(data_list, file, indent=2)
 
-    def save_shipment(self, shipment):
+    @classmethod
+    def save_shipment(cls, shipment):
         """Saves the shipping object into a file"""
         file_name = "shipments_store.json"
         # first read the file
-        data_list = self.read_json(file_name)
+        data_list = cls.read_json(file_name)
         # append the shipments list
         data_list.append(shipment.__dict__)
-        self.write_json(file_name, data_list)
+        cls.write_json(file_name, data_list)
 
     # pylint: disable=too-many-arguments
-    def register_order(self, product_id,  # TODO: TOO MANY ARGUMENTS
-                       order_type,
-                       address,
-                       phone_number,
-                       zip_code):
+    @classmethod
+    def register_order(cls, product_id: str = None,  # TODO: PREGUNTAR lo de las clases
+                       order_type: str = None,
+                       address: str = None,
+                       phone_number: str = None,
+                       zip_code: str = None):
         """Register the orders into the order's file"""
-        self.validate_order_type(order_type)
-        self.validate_address(address)
-        self.validate_phone_number(phone_number)
-        self.validate_zip_code(zip_code)
-        if self.validate_ean13(product_id):
-            my_order = OrderRequest(product_id,
-                                    order_type,
-                                    address,
-                                    phone_number,
-                                    zip_code)
+        OrderType(order_type)
+        Address(address)
+        PhoneNumber(phone_number)
+        ZipCode(zip_code)
+        EAN13(product_id)
+        my_order = OrderRequest(product_id=product_id,
+                                order_type=order_type,
+                                delivery_address=address,
+                                phone_number=phone_number,
+                                zip_code=zip_code)
 
-        self.save_order(my_order)  # TODO: my_order may be referenced before asignament
+        cls.save_order(my_order)
 
         return my_order.order_id
 
-    @staticmethod
-    def validate_zip_code(zip_code):
-        if zip_code.isnumeric() and len(zip_code) == 5:
-            if int(zip_code) > 52999 or int(zip_code) < 1000:
-                raise OrderManagementException("zip_code is not valid")
-        else:
-            raise OrderManagementException("zip_code format is not valid")
-
-    def validate_phone_number(self, phone_number):
-        self.check_regex(phone_number, r"^(\+)[0-9]{11}", "phone number is not valid")
-
-    def validate_address(self, address):
-        regex_address = r"^(?=^.{20,100}$)(([a-zA-Z0-9]+\s)+[a-zA-Z0-9]+)$"
-        self.check_regex(address, regex_address, "address is not valid")
-
-    def validate_order_type(self, order_type):
-        self.check_regex(order_type, r"(Regular|Premium)", "order_type is not valid")
+#    @staticmethod
+#    def validate_zip_code(zip_code):
+#        if zip_code.isnumeric() and len(zip_code) == 5:
+#            if int(zip_code) > 52999 or int(zip_code) < 1000:
+#                raise OrderManagementException("zip_code is not valid")
+#        else:
+#            raise OrderManagementException("zip_code format is not valid")
+#
+#    def validate_phone_number(self, phone_number):
+#        self.check_regex(phone_number, r"^(\+)[0-9]{11}", "phone number is not valid")
+#
+#    def validate_address(self, address):
+#        regex_address = r"^(?=^.{20,100}$)(([a-zA-Z0-9]+\s)+[a-zA-Z0-9]+)$"
+#        self.check_regex(address, regex_address, "address is not valid")
+#
+#    def validate_order_type(self, order_type):
+#        self.check_regex(order_type, r"(Regular|Premium)", "order_type is not valid")
 
     # pylint: disable=too-many-locals
-    def send_product(self, input_file):
+    @classmethod
+    def send_product(cls, input_file):
         """Sends the order included in the input_file"""
         try:
             with open(input_file, "r", encoding="utf-8", newline="") as file:
@@ -136,12 +141,12 @@ class OrderManager:
 
         # check all the information
         try:
-            self.validate_order_id(data["OrderID"])
-            self.validate_email(data["ContactEmail"])
+            OrderID(data["OrderID"])  # TODO
+            Email(data["ContactEmail"])  # TODO
         except KeyError as ex:
             raise OrderManagementException("Bad label") from ex
 
-        order = self.search_order_id(data["OrderID"])
+        order = cls.search_order_id(data["OrderID"])
 
         my_shipment = OrderShipping(product_id=order.product_id,
                                     order_id=data["OrderID"],
@@ -149,7 +154,7 @@ class OrderManager:
                                     delivery_email=data["ContactEmail"])
 
         # save the OrderShipping in shipments_store.json
-        self.save_shipment(my_shipment)
+        cls.save_shipment(my_shipment)
 
         return my_shipment.tracking_code
 
@@ -183,29 +188,30 @@ class OrderManager:
             raise OrderManagementException("order_id not found")
         return order
 
-    def validate_email(self, email):
-        regex_email = r'^[a-z0-9]+([\._]?[a-z0-9]+)+[@](\w+[.])+\w{2,3}$'
-        self.check_regex(email, regex_email, "contact email is not valid")
-
-    def validate_order_id(self, order_id):
-        self.check_regex(order_id, r"[0-9a-fA-F]{32}$", "order id is not valid")
-
-    def deliver_product(self, tracking_code):
+#    def validate_email(self, email):
+#        regex_email = r'^[a-z0-9]+([\._]?[a-z0-9]+)+[@](\w+[.])+\w{2,3}$'
+#        self.check_regex(email, regex_email, "contact email is not valid")
+#
+#    def validate_order_id(self, order_id):
+#        self.check_regex(order_id, r"[0-9a-fA-F]{32}$", "order id is not valid")
+#
+    @classmethod
+    def deliver_product(cls, tracking_code):
         """Register the delivery of the product"""
-        self.validate_tracking_code(tracking_code)
-        item = self.search_tracking_code(tracking_code)
+        TrackingCode(tracking_code)  # TODO
+        item = cls.search_tracking_code(tracking_code)
 
         delivery_day = item["_OrderShipping__delivery_day"]
-        self.check_delivery_day(delivery_day)
+        cls.check_delivery_day(delivery_day)
 
         file_name = "shipments_delivered.json"
 
-        data_list = self.read_json(file_name)
+        data_list = cls.read_json(file_name)
 
         # append the delivery info
         data_list.append(str(tracking_code))
         data_list.append(str(datetime.utcnow()))
-        self.write_json(file_name, data_list)
+        cls.write_json(file_name, data_list)
         return True
 
     @staticmethod
@@ -255,9 +261,9 @@ class OrderManager:
         except FileNotFoundError as ex:
             raise OrderManagementException("Wrong file or file path") from ex
 
-    @staticmethod
-    def check_regex(variable, regex, message):
-        my_regex = re.compile(regex)
-        valid = my_regex.fullmatch(variable)
-        if not valid:
-            raise OrderManagementException(message)
+#    @staticmethod
+#    def check_regex(variable, regex, message):
+#        my_regex = re.compile(regex)
+#        valid = my_regex.fullmatch(variable)
+#        if not valid:
+#            raise OrderManagementException(message)

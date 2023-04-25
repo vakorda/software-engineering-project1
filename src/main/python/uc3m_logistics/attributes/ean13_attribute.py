@@ -1,5 +1,5 @@
-from attribute import Attribute
-from uc3m_logistics import OrderManagementException
+from .attribute import Attribute
+from ..order_management_exception import OrderManagementException
 
 
 class EAN13(Attribute):
