@@ -1,9 +1,8 @@
 """Contains the class OrderShipping"""
 from datetime import datetime
 import hashlib
-from .attributes import EAN13, Email, OrderID, TrackingCode
-
-# pylint: disable=too-many-instance-attributes
+from ..attributes import EAN13, Email, OrderID, TrackingCode
+from ..storage.order_shipping_store import OrderShippingStore, JsonStore
 
 
 class OrderShipping:
@@ -22,6 +21,28 @@ class OrderShipping:
         # __delivery_day must be expressed in seconds to be added to the timestamp
         self.__delivery_day = self.__issued_at + (delivery_days * 24 * 60 * 60)
         self.__tracking_code = TrackingCode(hashlib.sha256(self.__signature_string().encode()).hexdigest()).value
+
+    def save_shipment(self):
+        """Saves the shipping object into a file"""
+        file_name = "shipments_store.json"
+        # first read the file
+        store = JsonStore(file_name)
+        store.read_json()
+        # append the shipments list
+        store.add_dict_item(self.__dict__)
+        store.write_json()
+
+    @classmethod
+    def get_order_shipping(cls, file):
+        # check all the information
+        store = OrderShippingStore(file)
+        store.read_json()
+        order = store.find_order_from_shipment()
+
+        return cls(product_id=order.product_id,
+                   order_id=store.get_elem("OrderID"),
+                   order_type=order.order_type,
+                   delivery_email=store.get_elem("ContactEmail"))
 
     def __signature_string(self):
         """Composes the string to be used for generating the tracking_code"""

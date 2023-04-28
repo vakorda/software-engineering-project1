@@ -1,5 +1,5 @@
 import re
-from ..order_management_exception import OrderManagementException
+from ..exceptions import OrderManagementException
 
 
 class Attribute:

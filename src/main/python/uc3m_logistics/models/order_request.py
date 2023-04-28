@@ -3,10 +3,11 @@ import hashlib
 import json
 from datetime import datetime
 from freezegun import freeze_time
-from .order_management_exception import OrderManagementException
-from .order_manager_config import JSON_FILES_PATH
-from .attributes import Address, EAN13, OrderID,\
+from ..exceptions import OrderManagementException
+from ..order_manager_config import JSON_FILES_PATH
+from ..attributes import Address, EAN13, OrderID,\
     OrderType, PhoneNumber, ZipCode
+from ..storage.order_request_store import OrderRequestStore
 
 
 class OrderRequest:
@@ -22,6 +23,43 @@ class OrderRequest:
         justnow = datetime.utcnow()
         self.__time_stamp = datetime.timestamp(justnow)
         self.__order_id = OrderID(hashlib.md5(self.__str__().encode()).hexdigest()).value
+
+    def save_to_store(self):
+        OrderRequestStore.save_order(self)
+
+    def save_to_store_without_check(self):
+        OrderRequestStore.save_order_without_check(self)
+
+    @classmethod
+    def search_order_id(cls, order_id):
+        file_store = JSON_FILES_PATH + "orders_store.json"
+        with open(file_store, "r", encoding="utf-8", newline="") as file:
+            data_list = json.load(file)
+        found = False
+        for item in data_list:
+            if item["_OrderRequest__order_id"] == order_id:
+                found = True
+                # retrieve the orders data
+                product_id = item["_OrderRequest__product_id"]
+                delivery_address = item["_OrderRequest__delivery_address"]
+                order_type = item["_OrderRequest__order_type"]
+                phone_number = item["_OrderRequest__phone_number"]
+                order_timestamp = item["_OrderRequest__time_stamp"]
+                zip_code = item["_OrderRequest__zip_code"]
+                # set the time when the order was registered for checking the md5
+                with freeze_time(datetime.fromtimestamp(order_timestamp).date()):
+                    order = cls(product_id=product_id,
+                                delivery_address=delivery_address,
+                                order_type=order_type,
+                                phone_number=phone_number,
+                                zip_code=zip_code)
+
+                if order.order_id != order_id:
+                    raise OrderManagementException("Orders' data have been manipulated")
+        if not found:
+            raise OrderManagementException("order_id not found")
+        return order
+
 
     def __str__(self):
         return "OrderRequest:" + json.dumps(self.__dict__)
@@ -77,33 +115,3 @@ class OrderRequest:
     def zip_code(self):
         """Returns the order's zip_code"""
         return self.__zip_code
-
-    @classmethod
-    def search_order_id(cls, order_id):
-        file_store = JSON_FILES_PATH + "orders_store.json"
-        with open(file_store, "r", encoding="utf-8", newline="") as file:
-            data_list = json.load(file)
-        found = False
-        for item in data_list:
-            if item["_OrderRequest__order_id"] == order_id:
-                found = True
-                # retrieve the orders data
-                product_id = item["_OrderRequest__product_id"]
-                delivery_address = item["_OrderRequest__delivery_address"]
-                order_type = item["_OrderRequest__order_type"]
-                phone_number = item["_OrderRequest__phone_number"]
-                order_timestamp = item["_OrderRequest__time_stamp"]
-                zip_code = item["_OrderRequest__zip_code"]
-                # set the time when the order was registered for checking the md5
-                with freeze_time(datetime.fromtimestamp(order_timestamp).date()):
-                    order = cls(product_id=product_id,
-                                delivery_address=delivery_address,
-                                order_type=order_type,
-                                phone_number=phone_number,
-                                zip_code=zip_code)
-
-                if order.order_id != order_id:
-                    raise OrderManagementException("Orders' data have been manipulated")
-        if not found:
-            raise OrderManagementException("order_id not found")
-        return order
