@@ -1,7 +1,7 @@
 """Contains the class OrderShipping"""
 from datetime import datetime
 import hashlib
-from .attributes import EAN13, Email, OrderID, TrackingCode
+from ..attributes import EAN13, Email, OrderID, TrackingCode
 
 # pylint: disable=too-many-instance-attributes
 

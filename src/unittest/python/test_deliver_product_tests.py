@@ -5,7 +5,7 @@ import hashlib
 import json
 from freezegun import freeze_time
 from uc3m_logistics import OrderManager
-from uc3m_logistics import OrderManagementException
+from uc3m_logistics.exceptions import OrderManagementException
 from uc3m_logistics import JSON_FILES_PATH
 from uc3m_logistics import JSON_FILES_RF2_PATH
 
