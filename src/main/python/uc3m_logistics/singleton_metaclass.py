@@ -1,4 +1,6 @@
-class SingletonMeta(type):  # use metaclass=SingletonMeta in child
+
+
+class SingletonMeta(type):
 
     _instances = {}
 

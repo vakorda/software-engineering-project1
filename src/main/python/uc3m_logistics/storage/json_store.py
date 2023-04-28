@@ -4,14 +4,29 @@ from datetime import datetime
 from ..exceptions import OrderManagementException
 from ..order_manager_config import JSON_FILES_PATH
 from ..attributes import OrderID, Email
-from ..models import OrderRequest
 
 
 class JsonStore:
 
-    def __init__(self, file):
+    def __init__(self, file=None):
         self._file = file
         self._data_list = []
+
+    @property
+    def file(self):
+        return self._file
+
+    @file.setter
+    def file(self, value):
+        self._file = value
+
+    @property
+    def data_list(self):
+        return self._data_list
+
+    @data_list.setter
+    def data_list(self, value):
+        self._data_list = value
 
     def read_json(self):
         full_path = JSON_FILES_PATH + self._file
@@ -45,32 +60,3 @@ class JsonStore:
         else:
             raise OrderManagementException("order_id is already registered in orders_store")
 
-    @staticmethod
-    def search_order_id(order_id):
-        file_store = JSON_FILES_PATH + "orders_store.json"
-        with open(file_store, "r", encoding="utf-8", newline="") as file:
-            data_list = json.load(file)
-        found = False
-        for item in data_list:
-            if item["_OrderRequest__order_id"] == order_id:
-                found = True
-                # retrieve the orders data
-                product_id = item["_OrderRequest__product_id"]
-                delivery_address = item["_OrderRequest__delivery_address"]
-                order_type = item["_OrderRequest__order_type"]
-                phone_number = item["_OrderRequest__phone_number"]
-                order_timestamp = item["_OrderRequest__time_stamp"]
-                zip_code = item["_OrderRequest__zip_code"]
-                # set the time when the order was registered for checking the md5
-                with freeze_time(datetime.fromtimestamp(order_timestamp).date()):
-                    order = OrderRequest(product_id=product_id,
-                                         delivery_address=delivery_address,
-                                         order_type=order_type,
-                                         phone_number=phone_number,
-                                         zip_code=zip_code)
-
-                if order.order_id != order_id:
-                    raise OrderManagementException("Orders' data have been manipulated")
-        if not found:
-            raise OrderManagementException("order_id not found")
-        return order

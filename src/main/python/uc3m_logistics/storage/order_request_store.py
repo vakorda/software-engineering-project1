@@ -1,12 +1,10 @@
 import json
-from ..exceptions import OrderManagementException
 from .json_store import JsonStore
 from ..order_manager_config import JSON_FILES_PATH
+from ..singleton_metaclass import SingletonMeta
 
 
-class OrderRequestStore:
-    def __init__(self):
-        pass
+class OrderRequestStore(JsonStore, metaclass=SingletonMeta):
 
     @staticmethod
     def save_order(data):

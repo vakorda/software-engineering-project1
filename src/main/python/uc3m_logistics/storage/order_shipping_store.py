@@ -2,7 +2,8 @@ from .json_store import JsonStore
 import json
 from ..exceptions import OrderManagementException
 from ..attributes import OrderID, Email
-from ..models import OrderShipping
+from ..models.order_request import OrderRequest
+from ..singleton_metaclass import SingletonMeta
 
 
 class OrderShippingStore(JsonStore):
@@ -23,15 +24,8 @@ class OrderShippingStore(JsonStore):
             Email(self._data_list["ContactEmail"])  # TODO
         except KeyError as ex:
             raise OrderManagementException("Bad label") from ex
-        order = self.search_order_id(self._data_list["OrderID"])
+        order = OrderRequest.search_order_id(self._data_list["OrderID"])
         return order
 
-
-    def get_order_shipping(self):
-        # check all the information
-        order = self.find_order_from_shipment()
-
-        return OrderShipping(product_id=order.product_id,
-                                    order_id=self._data_list["OrderID"],
-                                    order_type=order.order_type,
-                                    delivery_email=self._data_list["ContactEmail"])
+    def get_elem(self, elem):
+        return self._data_list[elem]
