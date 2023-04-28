@@ -1,0 +1,26 @@
+Name                                                   Stmts   Miss Branch BrPart  Cover
+----------------------------------------------------------------------------------------
+__init__.py                                                0      0      0      0   100%
+uc3m_logistics\__init__.py                                 6      0      0      0   100%
+uc3m_logistics\attributes\__init__.py                      9      0      0      0   100%
+uc3m_logistics\attributes\address_attribute.py             6      0      0      0   100%
+uc3m_logistics\attributes\attribute.py                    19      3      2      0    86%
+uc3m_logistics\attributes\ean13_attribute.py              25      2      6      0    94%
+uc3m_logistics\attributes\email_attribute.py               6      0      0      0   100%
+uc3m_logistics\attributes\order_id_attribute.py            6      0      0      0   100%
+uc3m_logistics\attributes\order_type_attribute.py          6      0      0      0   100%
+uc3m_logistics\attributes\phone_number_attribute.py        6      0      0      0   100%
+uc3m_logistics\attributes\tracking_code_attribute.py       6      0      0      0   100%
+uc3m_logistics\attributes\zip_code_attribute.py           11      0      4      0   100%
+uc3m_logistics\order_management_exception.py              10      1      0      0    90%
+uc3m_logistics\order_manager.py                          140     13     26      5    89%
+uc3m_logistics\order_manager_config.py                     3      0      0      0   100%
+uc3m_logistics\order_request.py                           74     28      8      0    56%
+uc3m_logistics\order_shipping.py                          47      9      0      0    81%
+uc3m_logistics\storage\__init__.py                         0      0      0      0   100%
+uc3m_logistics\storage\json_store.py                       0      0      0      0   100%
+uc3m_logistics\storage\orders_json_store.py                0      0      0      0   100%
+uc3m_logistics\storage\shipments_delivered.py              0      0      0      0   100%
+uc3m_logistics\storage\shipments_json_store.py             0      0      0      0   100%
+----------------------------------------------------------------------------------------
+TOTAL                                                    380     56     46      5    84%

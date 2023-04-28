@@ -1,7 +1,13 @@
 """Contains the class OrderShipping"""
+import json
 from datetime import datetime
 import hashlib
-from .attributes import EAN13, Email, OrderID, TrackingCode
+from uc3m_logistics.attributes import EAN13, Email, OrderID, TrackingCode
+from ..storage import OrderShippingStore, OrderRequestStore
+from ..exceptions import OrderManagementException
+from ..storage import JsonStore
+from uc3m_logistics.order_manager_config import JSON_FILES_PATH
+from ..storage import SendProductInput
 
 # pylint: disable=too-many-instance-attributes
 
@@ -22,6 +28,20 @@ class OrderShipping:
         # __delivery_day must be expressed in seconds to be added to the timestamp
         self.__delivery_day = self.__issued_at + (delivery_days * 24 * 60 * 60)
         self.__tracking_code = TrackingCode(hashlib.sha256(self.__signature_string().encode()).hexdigest()).value
+
+    def save_to_store(self):
+        OrderShippingStore().save_shipment(self)
+
+    @classmethod
+    def shipping_from_file(cls, input_file):
+        data = SendProductInput(input_file).data
+
+        order = OrderRequestStore().search_order_id(data["OrderID"])
+
+        return cls(product_id=order.product_id,
+                   order_id=data["OrderID"],
+                   order_type=order.order_type,
+                   delivery_email=data["ContactEmail"])
 
     def __signature_string(self):
         """Composes the string to be used for generating the tracking_code"""

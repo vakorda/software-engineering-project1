@@ -3,10 +3,11 @@ import hashlib
 import json
 from datetime import datetime
 from freezegun import freeze_time
-from .order_management_exception import OrderManagementException
-from .order_manager_config import JSON_FILES_PATH
-from .attributes import Address, EAN13, OrderID,\
+from uc3m_logistics.exceptions.order_management_exception import OrderManagementException
+from uc3m_logistics.order_manager_config import JSON_FILES_PATH
+from uc3m_logistics.attributes import Address, EAN13, OrderID,\
     OrderType, PhoneNumber, ZipCode
+from uc3m_logistics.storage import OrderRequestStore
 
 
 class OrderRequest:
@@ -79,7 +80,7 @@ class OrderRequest:
         return self.__zip_code
 
     @classmethod
-    def search_order_id(cls, order_id):
+    def search_order_id(cls, order_id):  # find_item_by_key
         file_store = JSON_FILES_PATH + "orders_store.json"
         with open(file_store, "r", encoding="utf-8", newline="") as file:
             data_list = json.load(file)
@@ -107,3 +108,6 @@ class OrderRequest:
         if not found:
             raise OrderManagementException("order_id not found")
         return order
+
+    def save_to_store(self):
+        OrderRequestStore.save_order(self)
